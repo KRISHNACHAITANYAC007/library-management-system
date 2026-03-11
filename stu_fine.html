@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fine | LMS</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <img src="nit-kkr-logo.jpeg" alt="logo" loading="lazy">
+        <img src="image copy 15.png" alt="logo1" >
+        
+
+    </header>
+
+    <nav class="navbar">
+        <div class="user_details">
+        <span><strong>User Name:</strong>krishna</span>
+        <span><strong>Roll no:</strong>123456</span>
+    </div>
+        <div class="logout">
+            <a href="login.html">Logout</a>
+        </div>
+    </nav>
+
+    <main class="stu_fac_dashboard">
+        <section class="welcome">
+            <h2>Fine Details 🪙</h2>
+            <p>View and clear your pending library fines</p>
+        </section>
+
+        <section class="fines">
+        <div class="fine">
+            <h3>Total Pending Fine</h3>
+            <p class="fineamt" id="totalFine">₹0</p>
+        </div>
+    </section>
+
+
+     <section class="table_of_books">
+            <table class="booktable">
+                <thead>
+                    <tr>
+                        <th>Cover</th>
+                        <th>Book ID</th>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Edition</th>
+                        <th>Issue Date</th>
+                        <th>Due Date</th>
+                        <th>Days Exceeded</th>
+                        <th>Fine Amount(in Rs.)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody class="fine-body">
+               
+                </tbody>
+            </table>
+        </section>
+
+    <section class="alerts">
+        <h3> ⚠️Important Notice</h3><br>
+        <ul>
+            <li>Borrowing privileges are blocked until fine is cleared.</li>
+            <li>Please contact the librarian for any discrepancy.</li>
+        </ul>
+    </section>
+
+
+    </main>
+
+
+
+
+
+    <footer class="library-footer">
+  <div class="footer-container">
+    <div class="footer-section">
+      <h3>Library Management System</h3>
+      <p>Your digital gateway to knowledge, books, and learning.</p>
+    </div>
+
+    <div class="footer-section">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about_us.html">About Us </a></li>
+        <li><a href="contact-us.html">Contact Us</a></li>
+        <li><a href="help.html">Help</a></li>
+        
+      </ul>
+    </div>
+
+    <div class="footer-section">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="#">Help</a></li>
+        <li><a href="#">Rules</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-section">
+      <h4>Contact</h4>
+      <p>Email: library@lms.com</p>
+      <p>Phone: +91 98765 43210</p>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>© 2026 Library Management System | All Rights Reserved</p>
+  </div>
+</footer>
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+const fineBook = JSON.parse(localStorage.getItem("fineBook"));
+const fineAmount = localStorage.getItem("fineAmount");
+
+const table = document.querySelector(".fine-body");
+
+if(fineBook){
+
+const today = new Date();
+const due = new Date(fineBook.dueDate);
+
+const daysExceeded = Math.max(
+0,
+Math.floor((today - due) / (1000*60*60*24))
+);
+
+const row = document.createElement("tr");
+
+row.innerHTML = `
+<td><img src="${fineBook.image}" class="book-img"></td>
+<td>${fineBook.id}</td>
+<td>${fineBook.title}</td>
+<td>${fineBook.author}</td>
+<td>${fineBook.edition}</td>
+<td>${fineBook.issueDate}</td>
+<td>${fineBook.dueDate}</td>
+<td>${daysExceeded}</td>
+<td>₹${fineAmount}</td>
+<td><button class="button" onclick="clearFine()">Pay Fine</button></td>
+`;
+
+table.appendChild(row);
+
+document.querySelector(".fineamt").innerText = "₹" + fineAmount;
+
+}
+
+});
+
+</script>
+<script>
+
+function clearFine(){
+
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+const index = localStorage.getItem("fineBookIndex");
+
+cart.splice(index,1);
+
+localStorage.setItem("cart", JSON.stringify(cart));
+
+localStorage.removeItem("fineAmount");
+localStorage.removeItem("fineBook");
+localStorage.removeItem("fineBookIndex");
+
+alert("Fine Paid Successfully");
+
+window.location.href = "my_books.html";
+
+}
+
+</script>
+</body>
+</html>

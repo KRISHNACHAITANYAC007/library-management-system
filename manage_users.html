@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users | LMS</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <img src="nit-kkr-logo.jpeg" alt="logo" loading="lazy">
+        <img src="image copy 15.png" alt="logo1" >
+        
+
+    </header>
+
+    <nav class="navbar">
+        <div class="user_details">
+        <span><strong>Admin Name:</strong>krishna</span>
+        <span><strong>Admin ID:</strong>123456</span>
+    </div>
+        <div class="logout">
+            <a href="login.html">Logout</a>
+        </div>
+    </nav>
+
+    <main class="stu_fac_dashboard">
+     <section class="welcome">
+    <h2>Manage Users 👥</h2>
+    <p>View, block, or update user roles</p>
+  </section>
+
+
+  <div class="search-container">
+    <form class="search-bar">
+      <select class="branch-select">
+        <option value="all">All Roles</option>
+        <option value="student">Student</option>
+        <option value="faculty">Faculty</option>
+        <option value="librarian">Librarian</option>
+        
+      </select>
+
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search by name, email or ID..."
+      >
+
+      <button type="submit" class="search-btn">🔍</button>
+    </form>
+  </div>
+
+  
+  <section class="table_of_books">
+    <table class="booktable">
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>STU101</td>
+          <td>Rahul Sharma</td>
+          <td>rahul@nitkkr.ac.in</td>
+          <td>Student</td>
+          <td class="status-Ok">Active</td>
+          <td>
+            <button class="button size"  onclick="toggleUser(this)">Block</button>
+          </td>
+        </tr>
+
+        <tr>
+          <td>FAC202</td>
+          <td>Dr. Anjali</td>
+          <td>anjali@nitkkr.ac.in</td>
+          <td>Faculty</td>
+          <td class="status-Ok">Active</td>
+          <td>
+            <button class="button size" onclick="toggleUser(this)">Block</button>
+          </td>
+        </tr>
+
+        <tr>
+          <td>LIB303</td>
+          <td>Mr. Suresh</td>
+          <td>suresh@nitkkr.ac.in</td>
+          <td>Librarian</td>
+          <td class="status-due">Blocked</td>
+          <td>
+            <button class="button" onclick="toggleUser(this)">Unblock</button>
+          </td>
+        </tr>
+        <tr>
+          <td>FAC202</td>
+          <td>Dr. Anjali</td>
+          <td>anjali@nitkkr.ac.in</td>
+          <td>Faculty</td>
+          <td class="status-Ok">Active</td>
+          <td>
+            <button class="button size" onclick="toggleUser(this)">Block</button>
+          </td>
+        </tr>
+        <tr>
+          <td>FAC202</td>
+          <td>Dr. Anjali</td>
+          <td>anjali@nitkkr.ac.in</td>
+          <td>Faculty</td>
+          <td class="status-Ok">Active</td>
+          <td>
+            <button class="button size" onclick="toggleUser(this)">Block</button>
+          </td>
+        </tr>
+        <tr>
+          <td>FAC202</td>
+          <td>Dr. Anjali</td>
+          <td>anjali@nitkkr.ac.in</td>
+          <td>Faculty</td>
+          <td class="status-Ok">Active</td>
+          <td>
+            <button class="button size" onclick="toggleUser(this)">Block</button>
+          </td>
+        </tr>
+        <tr>
+          <td>FAC202</td>
+          <td>Dr. Anjali</td>
+          <td>anjali@nitkkr.ac.in</td>
+          <td>Faculty</td>
+          <td class="status-Ok">Active</td>
+          <td>
+            <button class="button size" onclick="toggleUser(this)">Block</button>
+          </td>
+        </tr>
+        <tr>
+          <td>FAC202</td>
+          <td>Dr. Anjali</td>
+          <td>anjali@nitkkr.ac.in</td>
+          <td>Faculty</td>
+          <td class="status-Ok">Active</td>
+          <td>
+            <button class="button size" onclick="toggleUser(this)">Block</button>
+          </td>
+        </tr>
+        <tr>
+          <td>FAC202</td>
+          <td>Dr. Anjali</td>
+          <td>anjali@nitkkr.ac.in</td>
+          <td>Faculty</td>
+          <td class="status-Ok">Active</td>
+          <td>
+            <button class="button size" onclick="toggleUser(this)">Block</button>
+          </td>
+        </tr>
+        <tr>
+          <td>FAC202</td>
+          <td>Dr. Anjali</td>
+          <td>anjali@nitkkr.ac.in</td>
+          <td>Faculty</td>
+          <td class="status-Ok">Active</td>
+          <td>
+            <button class="button size" onclick="toggleUser(this)">Block</button>
+          </td>
+        </tr>
+        <tr>
+          <td>FAC202</td>
+          <td>Dr. Anjali</td>
+          <td>anjali@nitkkr.ac.in</td>
+          <td>Faculty</td>
+          <td class="status-Ok">Active</td>
+          <td>
+            <button class="button size" onclick="toggleUser(this)">Block</button>
+          </td>
+        </tr>
+        <tr>
+          <td>FAC202</td>
+          <td>Dr. Anjali</td>
+          <td>anjali@nitkkr.ac.in</td>
+          <td>Faculty</td>
+          <td class="status-Ok">Active</td>
+          <td>
+            <button class="button size" onclick="toggleUser(this)">Block</button>
+          </td>
+        </tr>
+        <tr>
+          <td>FAC202</td>
+          <td>Dr. Anjali</td>
+          <td>anjali@nitkkr.ac.in</td>
+          <td>Faculty</td>
+          <td class="status-Ok">Active</td>
+          <td>
+            <button class="button size" onclick="toggleUser(this)">Block</button>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </section>
+
+
+<section class="alerts">
+        <h3>📢 Notifications</h3>
+        <ul>
+            <li>✔ All services running normally</li>
+                <li>⚠ 3 user accounts pending verification</li>
+        </ul>
+    </section>
+
+
+    </main>
+
+
+
+
+
+    <footer class="library-footer">
+  <div class="footer-container">
+    <div class="footer-section">
+      <h3>Library Management System</h3>
+      <p>Your digital gateway to knowledge, books, and learning.</p>
+    </div>
+
+    <div class="footer-section">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about_us.html">About Us </a></li>
+        <li><a href="contact-us.html">Contact Us</a></li>
+        <li><a href="help.html">Help</a></li>
+        
+      </ul>
+    </div>
+
+    <div class="footer-section">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="#">Help</a></li>
+        <li><a href="#">Rules</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-section">
+      <h4>Contact</h4>
+      <p>Email: library@lms.com</p>
+      <p>Phone: +91 98765 43210</p>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>© 2026 Library Management System | All Rights Reserved</p>
+  </div>
+</footer>
+<script src="script.js"></script>
+</body>
+</html>

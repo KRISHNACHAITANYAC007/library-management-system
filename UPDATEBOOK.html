@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Books | LMS</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <img src="nit-kkr-logo.jpeg" alt="logo" loading="lazy">
+        <img src="image copy 15.png" alt="logo1" >
+        
+
+    </header>
+
+    <nav class="navbar">
+        <div class="user_details">
+        <span><strong>Librarian  Name:</strong>krishna</span>
+        <span><strong>Librarian Id:</strong>123456</span>
+    </div>
+        <div class="logout">
+            <a href="login.html">Logout</a>
+        </div>
+    </nav>
+
+    <main class="stu_fac_dashboard">
+        <section class="welcome">
+            <h2>Manage Books 📚</h2>
+            <p>Edit book details here</p>
+        </section>
+
+        <div class="search-container">
+
+  <form class="search-bar">
+    
+    <select class="branch-select">
+      <option value="all">All Branches</option>
+      <option value="cse">Computer Science (CSE)</option>
+      <option value="ece">Electronics (ECE)</option>
+      <option value="ee">Electrical (EE)</option>
+      <option value="me">Mechanical (ME)</option>
+      <option value="ce">Civil (CE)</option>
+      <option value="it">Information Technology (IT)</option>
+    </select>
+
+    <input 
+      type="text" 
+      class="search-input" 
+      placeholder="Search books by name, author, or edition..."
+    >
+</form>
+    <button type="submit" class="search-btn">
+      🔍
+    </button>
+  
+        </div>
+        <section class="table_of_books">
+            <table class="booktable">
+                <thead>
+                    <tr>
+                        <th>Cover</th>
+                        <th>Book ID</th>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Edition</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody class="manage-books-body">
+                    
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+
+
+
+
+
+    <footer class="library-footer">
+  <div class="footer-container">
+    <div class="footer-section">
+      <h3>Library Management System</h3>
+      <p>Your digital gateway to knowledge, books, and learning.</p>
+    </div>
+
+    <div class="footer-section">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about_us.html">About Us </a></li>
+        <li><a href="contact-us.html">Contact Us</a></li>
+        <li><a href="help.html">Help</a></li>
+        
+      </ul>
+    </div>
+
+    <div class="footer-section">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="#">Help</a></li>
+        <li><a href="#">Rules</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-section">
+      <h4>Contact</h4>
+      <p>Email: library@lms.com</p>
+      <p>Phone: +91 98765 43210</p>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>© 2026 Library Management System | All Rights Reserved</p>
+  </div>
+</footer>
+<script src="script.js"></script>
+</body>
+</html>
