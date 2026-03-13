@@ -64,13 +64,14 @@ body: `title=${title}&author=${author}&edition=${edition}&quantity=${quantity}`
 })
 .then(res => res.text())
 .then(data => {
-
+data = data.trim();
 if(data === "success"){
 alert("Book Added Successfully!");
 addActivity("New Book Added","Library Staff","Librarian","Added");
 addForm.reset();
 }
 else{
+console.log(data);
 alert("Error adding book");
 }
 
