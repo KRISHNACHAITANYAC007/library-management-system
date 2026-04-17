@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BORROW RECORDS | LMS</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+<img src="nit-kkr-logo.jpeg" alt="logo">
+<img src="image copy 15.png" alt="logo1">
+</header>
+
+<nav class="navbar">
+
+<div class="user_details">
+<span><strong>Librarian Name:</strong> Krishna</span>
+<span><strong>Librarian ID:</strong> 123456</span>
+</div>
+
+<div class="logout">
+<a href="login.html">Logout</a>
+</div>
+
+</nav>
+
+
+<main class="stu_fac_dashboard">
+
+<section class="welcome">
+<h2>Borrow Records 📑</h2>
+<p>View all borrowing history</p>
+</section>
+
+<!-- SEARCH BAR -->
+<section class="dashboard-search">
+<div class="dashboard-search-bar">
+<div class="autocomplete-wrapper">
+<input type="text" id="borrowSearchInput" class="dashboard-search-input" placeholder="Search by user name, book title, or status..." autocomplete="off">
+<div class="autocomplete-list" id="borrowAutoList"></div>
+</div>
+<button class="dashboard-search-btn" onclick="filterRecords()">🔍 Search</button>
+<button type="button" class="dashboard-reset-btn" id="resetBtn" title="Reset">✕</button>
+</div>
+</section>
+
+
+<section class="table_of_books">
+
+<h2>All Borrow Records</h2>
+
+<table class="booktable">
+
+<thead>
+<tr>
+<th>User</th>
+<th>Book</th>
+<th>Issue Date</th>
+<th>Due Date</th>
+<th>Return Date</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody id="borrowRecords">
+
+<tr>
+<td colspan="6">Loading...</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</section>
+
+</main>
+
+
+<footer class="library-footer">
+
+<div class="footer-container">
+
+<div class="footer-section">
+<h3>Library Management System</h3>
+<p>Your digital gateway to knowledge.</p>
+</div>
+
+<div class="footer-section">
+<h4>Quick Links</h4>
+<ul>
+<li><a href="librarian_dashboard.html">Dashboard</a></li>
+<li><a href="manage_requests.html">Manage Requests</a></li>
+<li><a href="overdue_books.html">Overdue Books</a></li>
+</ul>
+</div>
+
+<div class="footer-section">
+<h4>Contact</h4>
+<p>Email: library@lms.com</p>
+<p>Phone: +91 98765 43210</p>
+</div>
+
+</div>
+
+<div class="footer-bottom">
+<p>© 2026 LMS</p>
+</div>
+
+</footer>
+
+
+<script src="script.js"></script>
+
+<script>
+
+let allRecords = [];
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    try {
+        const user = JSON.parse(localStorage.getItem("currentUser"));
+        if (user) {
+            document.querySelector(".user_details").innerHTML = `
+                <span><strong>Librarian Name:</strong> ${user.fullName || user.username}</span>
+                <span><strong>Librarian ID:</strong> ${user._id.slice(-6).toUpperCase()}</span>
+            `;
+            document.querySelector(".welcome h2").textContent = `Welcome, ${user.fullName || user.username} 🙌`;
+        }
+
+        const res = await BorrowService.getAllBorrowRecords()
+        allRecords = res.data || []
+
+        renderRecords(allRecords)
+
+    }
+
+    catch(err){
+        console.error("Borrow Records Error:", err)
+    }
+
+})
+
+function renderRecords(records) {
+    const table = document.getElementById("borrowRecords")
+    table.innerHTML = ""
+
+    if(records.length === 0){
+        table.innerHTML = `
+        <tr>
+        <td colspan="6" style="text-align:center; padding:20px;">No Borrow Records Found</td>
+        </tr>
+        `
+        return
+    }
+
+    records.forEach(record => {
+
+        const userName = record.user ? record.user.fullName : "Unknown"
+        const book = record.book ? record.book.title : "Unknown"
+        const issueDate = new Date(record.issueDate).toLocaleDateString("en-IN")
+        const dueDate = new Date(record.dueDate).toLocaleDateString("en-IN")
+        const returnDate = record.returnDate
+            ? new Date(record.returnDate).toLocaleDateString("en-IN")
+            : "—"
+        const status = record.status
+
+        table.innerHTML += `
+        <tr>
+        <td>${userName}</td>
+        <td>${book}</td>
+        <td>${issueDate}</td>
+        <td>${dueDate}</td>
+        <td>${returnDate}</td>
+        <td class="status-${status.toLowerCase()}">${status}</td>
+        </tr>
+        `
+    })
+}
+
+function filterRecords() {
+    const query = document.getElementById("borrowSearchInput").value.trim().toLowerCase();
+
+    if (!query) {
+        renderRecords(allRecords);
+        return;
+    }
+
+    const filtered = allRecords.filter(record => {
+        const userName = (record.user ? record.user.fullName : "").toLowerCase();
+        const book = (record.book ? record.book.title : "").toLowerCase();
+        const status = (record.status || "").toLowerCase();
+        const issueDate = new Date(record.issueDate).toLocaleDateString("en-IN").toLowerCase();
+        const dueDate = new Date(record.dueDate).toLocaleDateString("en-IN").toLowerCase();
+        const returnDate = record.returnDate ? new Date(record.returnDate).toLocaleDateString("en-IN").toLowerCase() : "";
+
+        return userName.includes(query) ||
+               book.includes(query) ||
+               status.includes(query) ||
+               issueDate.includes(query) ||
+               dueDate.includes(query) ||
+               returnDate.includes(query);
+    });
+
+    renderRecords(filtered);
+}
+
+// ===== AUTOCOMPLETE =====
+const acInput = document.getElementById("borrowSearchInput");
+const acList = document.getElementById("borrowAutoList");
+let acIndex = -1;
+
+acInput.addEventListener("input", function() {
+    const val = this.value.trim().toLowerCase();
+    acList.innerHTML = "";
+    acIndex = -1;
+
+    // Live filter the table
+    filterRecords();
+
+    if (val.length < 1) { acList.classList.remove("active"); return; }
+
+    // Build unique suggestions from user names, book titles, and statuses
+    const seen = new Set();
+    const suggestions = [];
+
+    allRecords.forEach(record => {
+        const userName = record.user ? record.user.fullName : null;
+        const bookTitle = record.book ? record.book.title : null;
+        const status = record.status;
+
+        if (userName && userName.toLowerCase().includes(val) && !seen.has("user:" + userName.toLowerCase())) {
+            seen.add("user:" + userName.toLowerCase());
+            suggestions.push({ label: userName, sub: "👤 User" });
+        }
+
+        if (bookTitle && bookTitle.toLowerCase().includes(val) && !seen.has("book:" + bookTitle.toLowerCase())) {
+            seen.add("book:" + bookTitle.toLowerCase());
+            suggestions.push({ label: bookTitle, sub: "📚 Book" });
+        }
+
+        if (status && status.toLowerCase().includes(val) && !seen.has("status:" + status.toLowerCase())) {
+            seen.add("status:" + status.toLowerCase());
+            suggestions.push({ label: status, sub: "📋 Status" });
+        }
+    });
+
+    if (suggestions.length === 0) { acList.classList.remove("active"); return; }
+
+    suggestions.slice(0, 8).forEach(s => {
+        const div = document.createElement("div");
+        div.className = "autocomplete-item";
+        div.innerHTML = `<span class="item-title">${s.label}</span><span class="item-author">${s.sub}</span>`;
+        div.addEventListener("click", () => {
+            acInput.value = s.label;
+            acList.classList.remove("active");
+            filterRecords();
+        });
+        acList.appendChild(div);
+    });
+    acList.classList.add("active");
+});
+
+acInput.addEventListener("keydown", function(e) {
+    const items = acList.querySelectorAll(".autocomplete-item");
+    if (e.key === "ArrowDown") { e.preventDefault(); acIndex = Math.min(acIndex + 1, items.length - 1); updateAC(items); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); acIndex = Math.max(acIndex - 1, 0); updateAC(items); }
+    else if (e.key === "Enter" && acIndex >= 0) { e.preventDefault(); items[acIndex].click(); }
+    else if (e.key === "Enter") { e.preventDefault(); filterRecords(); acList.classList.remove("active"); }
+});
+
+function updateAC(items) {
+    items.forEach((el, i) => el.classList.toggle("selected", i === acIndex));
+}
+
+document.addEventListener("click", function(e) {
+    if (!acInput.contains(e.target) && !acList.contains(e.target)) acList.classList.remove("active");
+});
+
+// Reset button
+document.getElementById("resetBtn").addEventListener("click", () => {
+    acInput.value = "";
+    renderRecords(allRecords);
+});
+
+</script>
+
+</body>
+</html>

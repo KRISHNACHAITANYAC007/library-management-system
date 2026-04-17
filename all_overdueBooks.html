@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OVERDUE BOOKS | LMS</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+<img src="nit-kkr-logo.jpeg" alt="logo">
+<img src="image copy 15.png" alt="logo1">
+</header>
+
+<nav class="navbar">
+
+<div class="user_details">
+<span><strong>Librarian Name:</strong> Krishna</span>
+<span><strong>Librarian ID:</strong> 123456</span>
+</div>
+
+<div class="logout">
+<a href="login.html">Logout</a>
+</div>
+
+</nav>
+
+
+
+<main class="stu_fac_dashboard">
+
+<section class="welcome">
+<h2>Overdue Books ⚠</h2>
+<p>Books not returned on time</p>
+</section>
+
+<!-- SEARCH BAR -->
+<section class="dashboard-search">
+<div class="dashboard-search-bar">
+<div class="autocomplete-wrapper">
+<input type="text" id="overdueSearchInput" class="dashboard-search-input" placeholder="Search by user name, book title, or days late..." autocomplete="off">
+<div class="autocomplete-list" id="overdueAutoList"></div>
+</div>
+<button class="dashboard-search-btn" onclick="filterOverdue()">🔍 Search</button>
+<button type="button" class="dashboard-reset-btn" id="resetBtn" title="Reset">✕</button>
+</div>
+</section>
+
+
+<section class="table_of_books">
+
+<h2>Late Borrow Records</h2>
+
+<table class="booktable">
+
+<thead>
+<tr>
+<th>User</th>
+<th>Book</th>
+<th>Issue Date</th>
+<th>Due Date</th>
+<th>Days Late</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody id="overdueBooks">
+
+<tr>
+<td colspan="6">Loading...</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</section>
+
+</main>
+
+
+
+<footer class="library-footer">
+
+<div class="footer-container">
+
+<div class="footer-section">
+<h3>Library Management System</h3>
+<p>Your digital gateway to knowledge.</p>
+</div>
+
+<div class="footer-section">
+<h4>Quick Links</h4>
+<ul>
+<li><a href="librarian_dashboard.html">Dashboard</a></li>
+<li><a href="borrow_records.html">Borrow Records</a></li>
+<li><a href="manage_requests.html">Manage Requests</a></li>
+</ul>
+</div>
+
+<div class="footer-section">
+<h4>Contact</h4>
+<p>Email: library@lms.com</p>
+<p>Phone: +91 98765 43210</p>
+</div>
+
+</div>
+
+<div class="footer-bottom">
+<p>© 2026 LMS</p>
+</div>
+
+</footer>
+
+
+
+<script src="script.js"></script>
+
+<script>
+
+let allOverdue = [];
+const today = new Date();
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    try {
+        const user = JSON.parse(localStorage.getItem("currentUser"));
+        if (user) {
+            document.querySelector(".user_details").innerHTML = `
+                <span><strong>Librarian Name:</strong> ${user.fullName || user.username}</span>
+                <span><strong>Librarian ID:</strong> ${user._id.slice(-6).toUpperCase()}</span>
+            `;
+            document.querySelector(".welcome h2").textContent = `Welcome, ${user.fullName || user.username} 🙌`;
+        }
+
+        const res = await BorrowService.getAllOverdue()
+        const records = res.data || []
+
+        allOverdue = records.filter(record => {
+            const due = new Date(record.dueDate)
+            return !record.returned && due < today
+        })
+
+        renderOverdue(allOverdue)
+
+    }
+
+    catch(err){
+        console.error("Overdue Books Error:", err)
+    }
+
+})
+
+function renderOverdue(records) {
+    const table = document.getElementById("overdueBooks")
+    table.innerHTML = ""
+
+    if(records.length === 0){
+        table.innerHTML = `
+        <tr>
+        <td colspan="6" style="text-align:center; padding:20px;">No Overdue Books 🎉</td>
+        </tr>
+        `
+        return
+    }
+
+    records.forEach(record => {
+
+        const userName = record.user ? record.user.fullName : "Unknown"
+        const book = record.book ? record.book.title : "Unknown"
+        const issueDate = new Date(record.issueDate).toLocaleDateString("en-IN")
+        const dueDate = new Date(record.dueDate).toLocaleDateString("en-IN")
+        const daysLate = Math.floor((today - new Date(record.dueDate)) / (1000 * 60 * 60 * 24))
+
+        table.innerHTML += `
+        <tr>
+        <td>${userName}</td>
+        <td>${book}</td>
+        <td>${issueDate}</td>
+        <td>${dueDate}</td>
+        <td>${daysLate} days</td>
+        <td class="status-overdue">Overdue</td>
+        </tr>
+        `
+    })
+}
+
+function filterOverdue() {
+    const query = document.getElementById("overdueSearchInput").value.trim().toLowerCase();
+
+    if (!query) {
+        renderOverdue(allOverdue);
+        return;
+    }
+
+    const filtered = allOverdue.filter(record => {
+        const userName = (record.user ? record.user.fullName : "").toLowerCase();
+        const book = (record.book ? record.book.title : "").toLowerCase();
+        const issueDate = new Date(record.issueDate).toLocaleDateString("en-IN").toLowerCase();
+        const dueDate = new Date(record.dueDate).toLocaleDateString("en-IN").toLowerCase();
+        const daysLate = String(Math.floor((today - new Date(record.dueDate)) / (1000 * 60 * 60 * 24)));
+
+        return userName.includes(query) || book.includes(query) || issueDate.includes(query) || dueDate.includes(query) || daysLate.includes(query);
+    });
+
+    renderOverdue(filtered);
+}
+
+// ===== AUTOCOMPLETE =====
+const acInput = document.getElementById("overdueSearchInput");
+const acList = document.getElementById("overdueAutoList");
+let acIndex = -1;
+
+acInput.addEventListener("input", function() {
+    const val = this.value.trim().toLowerCase();
+    acList.innerHTML = "";
+    acIndex = -1;
+
+    filterOverdue();
+
+    if (val.length < 1) { acList.classList.remove("active"); return; }
+
+    const seen = new Set();
+    const suggestions = [];
+
+    allOverdue.forEach(record => {
+        const userName = record.user ? record.user.fullName : null;
+        const bookTitle = record.book ? record.book.title : null;
+
+        if (userName && userName.toLowerCase().includes(val) && !seen.has("u:" + userName.toLowerCase())) {
+            seen.add("u:" + userName.toLowerCase());
+            suggestions.push({ label: userName, sub: "👤 User" });
+        }
+        if (bookTitle && bookTitle.toLowerCase().includes(val) && !seen.has("b:" + bookTitle.toLowerCase())) {
+            seen.add("b:" + bookTitle.toLowerCase());
+            suggestions.push({ label: bookTitle, sub: "📚 Book" });
+        }
+    });
+
+    if (suggestions.length === 0) { acList.classList.remove("active"); return; }
+
+    suggestions.slice(0, 8).forEach(s => {
+        const div = document.createElement("div");
+        div.className = "autocomplete-item";
+        div.innerHTML = `<span class="item-title">${s.label}</span><span class="item-author">${s.sub}</span>`;
+        div.addEventListener("click", () => {
+            acInput.value = s.label;
+            acList.classList.remove("active");
+            filterOverdue();
+        });
+        acList.appendChild(div);
+    });
+    acList.classList.add("active");
+});
+
+acInput.addEventListener("keydown", function(e) {
+    const items = acList.querySelectorAll(".autocomplete-item");
+    if (e.key === "ArrowDown") { e.preventDefault(); acIndex = Math.min(acIndex + 1, items.length - 1); updateAC(items); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); acIndex = Math.max(acIndex - 1, 0); updateAC(items); }
+    else if (e.key === "Enter" && acIndex >= 0) { e.preventDefault(); items[acIndex].click(); }
+    else if (e.key === "Enter") { e.preventDefault(); filterOverdue(); acList.classList.remove("active"); }
+});
+
+function updateAC(items) {
+    items.forEach((el, i) => el.classList.toggle("selected", i === acIndex));
+}
+
+document.addEventListener("click", function(e) {
+    if (!acInput.contains(e.target) && !acList.contains(e.target)) acList.classList.remove("active");
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+    acInput.value = "";
+    renderOverdue(allOverdue);
+});
+
+</script>
+
+</body>
+</html>

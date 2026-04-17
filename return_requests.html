@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RETURN REQUESTS | LMS</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+<img src="nit-kkr-logo.jpeg" alt="logo">
+<img src="image copy 15.png" alt="logo1">
+</header>
+
+<nav class="navbar">
+
+<div class="user_details">
+<span><strong>Librarian:</strong> Krishna</span>
+</div>
+
+<div class="logout">
+<a href="login.html">Logout</a>
+</div>
+
+</nav>
+
+
+
+<main class="stu_fac_dashboard">
+
+<section class="welcome">
+<h2>Return Requests 🔄</h2>
+<p>Verify and approve book return requests</p>
+</section>
+
+<!-- SEARCH BAR -->
+<section class="dashboard-search">
+<div class="dashboard-search-bar">
+<div class="autocomplete-wrapper">
+<input type="text" id="returnSearchInput" class="dashboard-search-input" placeholder="Search by user name, book title, or status..." autocomplete="off">
+<div class="autocomplete-list" id="returnAutoList"></div>
+</div>
+<button class="dashboard-search-btn" onclick="filterReturnRequests()">🔍 Search</button>
+<button type="button" class="dashboard-reset-btn" id="resetBtn" title="Reset">✕</button>
+</div>
+</section>
+
+
+<section class="table_of_books">
+
+<h2>Book Return Requests</h2>
+
+<table class="booktable">
+
+<thead>
+<tr>
+<th>User</th>
+<th>Book</th>
+<th>Request Type</th>
+<th>Status</th>
+<th>Date</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="returnRequests">
+
+<tr>
+<td colspan="6">Loading...</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</section>
+
+</main>
+
+
+
+<footer class="library-footer">
+
+<div class="footer-container">
+
+<div class="footer-section">
+<h3>Library Management System</h3>
+<p>Your digital gateway to knowledge.</p>
+</div>
+
+<div class="footer-section">
+<h4>Quick Links</h4>
+<ul>
+<li><a href="librarian_dashboard.html">Dashboard</a></li>
+<li><a href="manage_requests.html">Manage Requests</a></li>
+<li><a href="borrow_records.html">Borrow Records</a></li>
+</ul>
+</div>
+
+<div class="footer-section">
+<h4>Contact</h4>
+<p>Email: library@lms.com</p>
+<p>Phone: +91 98765 43210</p>
+</div>
+
+</div>
+
+<div class="footer-bottom">
+<p>© 2026 LMS</p>
+</div>
+
+</footer>
+
+
+
+<script src="script.js"></script>
+
+<script>
+
+let allReturnRequests = [];
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    try {
+
+        const table = document.getElementById("returnRequests")
+
+        const res = await RequestService.getAllRequests()
+
+        const requests = res.data || []
+
+        // FILTER RETURN REQUESTS ONLY
+        allReturnRequests = requests.filter(r => r.type === "return")
+
+        renderReturnRequests(allReturnRequests)
+
+    }
+
+    catch(err){
+
+        console.error("Return Requests Error:", err)
+
+    }
+
+})
+
+function renderReturnRequests(requests) {
+    const table = document.getElementById("returnRequests")
+    table.innerHTML = ""
+
+    if(requests.length === 0){
+        table.innerHTML = `
+        <tr>
+        <td colspan="6" style="text-align:center; padding:20px;">No Return Requests Found</td>
+        </tr>
+        `
+        return
+    }
+
+    requests.forEach(req => {
+
+        const user = req.user ? req.user.fullName : "Unknown"
+        const book = req.book ? req.book.title : "Unknown"
+        const date = new Date(req.createdAt).toLocaleDateString("en-IN")
+
+        let actions = ""
+
+        if(req.status === "pending"){
+
+            actions = `
+            <button class="approve"
+            onclick="handleReturn('${req._id}','approved')">
+            Approve
+            </button>
+
+            <button class="reject"
+            onclick="handleReturn('${req._id}','rejected')">
+            Reject
+            </button>
+            `
+        }
+
+        table.innerHTML += `
+        <tr>
+
+        <td>${user}</td>
+
+        <td>${book}</td>
+
+        <td>${req.type}</td>
+
+        <td class="status-${req.status}">
+        ${req.status}
+        </td>
+
+        <td>${date}</td>
+
+        <td>${actions}</td>
+
+        </tr>
+        `
+    })
+}
+
+function filterReturnRequests() {
+    const query = document.getElementById("returnSearchInput").value.trim().toLowerCase();
+
+    if (!query) {
+        renderReturnRequests(allReturnRequests);
+        return;
+    }
+
+    const filtered = allReturnRequests.filter(req => {
+        const user = (req.user ? req.user.fullName : "").toLowerCase();
+        const book = (req.book ? req.book.title : "").toLowerCase();
+        const status = (req.status || "").toLowerCase();
+        const date = new Date(req.createdAt).toLocaleDateString("en-IN").toLowerCase();
+        return user.includes(query) || book.includes(query) || status.includes(query) || date.includes(query);
+    });
+
+    renderReturnRequests(filtered);
+}
+
+
+window.handleReturn = async (reqId,status)=>{
+
+    try{
+
+        await RequestService.handleRequest({reqId,status})
+
+        alert("Return request " + status)
+
+        location.reload()
+
+    }
+
+    catch(err){
+
+        alert("Action failed : " + err.message)
+
+    }
+
+}
+
+// ===== AUTOCOMPLETE =====
+const acInput = document.getElementById("returnSearchInput");
+const acList = document.getElementById("returnAutoList");
+let acIndex = -1;
+
+acInput.addEventListener("input", function() {
+    const val = this.value.trim().toLowerCase();
+    acList.innerHTML = "";
+    acIndex = -1;
+
+    // Live filter
+    filterReturnRequests();
+
+    if (val.length < 1) { acList.classList.remove("active"); return; }
+
+    const seen = new Set();
+    const suggestions = [];
+
+    allReturnRequests.forEach(req => {
+        const userName = req.user ? req.user.fullName : null;
+        const bookTitle = req.book ? req.book.title : null;
+        const status = req.status;
+
+        if (userName && userName.toLowerCase().includes(val) && !seen.has("u:" + userName.toLowerCase())) {
+            seen.add("u:" + userName.toLowerCase());
+            suggestions.push({ label: userName, sub: "👤 User" });
+        }
+        if (bookTitle && bookTitle.toLowerCase().includes(val) && !seen.has("b:" + bookTitle.toLowerCase())) {
+            seen.add("b:" + bookTitle.toLowerCase());
+            suggestions.push({ label: bookTitle, sub: "📚 Book" });
+        }
+        if (status && status.toLowerCase().includes(val) && !seen.has("s:" + status.toLowerCase())) {
+            seen.add("s:" + status.toLowerCase());
+            suggestions.push({ label: status, sub: "📋 Status" });
+        }
+    });
+
+    if (suggestions.length === 0) { acList.classList.remove("active"); return; }
+
+    suggestions.slice(0, 8).forEach(s => {
+        const div = document.createElement("div");
+        div.className = "autocomplete-item";
+        div.innerHTML = `<span class="item-title">${s.label}</span><span class="item-author">${s.sub}</span>`;
+        div.addEventListener("click", () => {
+            acInput.value = s.label;
+            acList.classList.remove("active");
+            filterReturnRequests();
+        });
+        acList.appendChild(div);
+    });
+    acList.classList.add("active");
+});
+
+acInput.addEventListener("keydown", function(e) {
+    const items = acList.querySelectorAll(".autocomplete-item");
+    if (e.key === "ArrowDown") { e.preventDefault(); acIndex = Math.min(acIndex + 1, items.length - 1); updateAC(items); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); acIndex = Math.max(acIndex - 1, 0); updateAC(items); }
+    else if (e.key === "Enter" && acIndex >= 0) { e.preventDefault(); items[acIndex].click(); }
+    else if (e.key === "Enter") { e.preventDefault(); filterReturnRequests(); acList.classList.remove("active"); }
+});
+
+function updateAC(items) {
+    items.forEach((el, i) => el.classList.toggle("selected", i === acIndex));
+}
+
+document.addEventListener("click", function(e) {
+    if (!acInput.contains(e.target) && !acList.contains(e.target)) acList.classList.remove("active");
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+    acInput.value = "";
+    renderReturnRequests(allReturnRequests);
+});
+
+</script>
+
+</body>
+</html>

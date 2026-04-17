@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Issued Books | LMS</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+<img src="nit-kkr-logo.jpeg">
+<img src="image copy 15.png">
+</header>
+
+<nav class="navbar">
+<div class="user_details">
+<span><strong>User Name:</strong> <span id="userName">Krishna</span></span>
+<span><strong>User Id:</strong> <span id="userId">123456</span></span>
+</div>
+<div class="logout">
+<a href="login.html">Logout</a>
+</div>
+</nav>
+
+<main class="stu_fac_dashboard">
+
+<section class="welcome">
+<h2>Issued Books 📚</h2>
+<p>Books currently issued to you</p>
+</section>
+
+<!-- SEARCH BAR -->
+<section class="dashboard-search">
+<div class="dashboard-search-bar">
+<div class="autocomplete-wrapper">
+<input type="text" id="issuedSearchInput" class="dashboard-search-input" placeholder="Search your issued books by title, author, or book ID..." autocomplete="off">
+<div class="autocomplete-list" id="issuedAutoList"></div>
+</div>
+<button class="dashboard-search-btn" onclick="filterIssuedBooks()">🔍 Search</button>
+<button type="button" class="dashboard-reset-btn" id="resetBtn" title="Reset">✕</button>
+</div>
+</section>
+
+<section class="table_of_books">
+
+<table class="booktable">
+
+<thead>
+<tr>
+<th>Cover</th>
+<th>Book ID</th>
+<th>Title</th>
+<th>Author</th>
+<th>Edition</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="booksTableBody">
+</tbody>
+
+</table>
+
+</section>
+
+</main>
+
+<footer class="library-footer">
+<div class="footer-container">
+<div class="footer-section">
+<h3>Library Management System</h3>
+<p>Your digital gateway to knowledge.</p>
+</div>
+<div class="footer-section">
+<h4>Quick Links</h4>
+<ul>
+<li><a href="student_faculty_dashboard.html">Dashboard</a></li>
+<li><a href="book_search.html">Browse Books</a></li>
+<li><a href="my_requests.html">My Requests</a></li>
+</ul>
+</div>
+<div class="footer-section">
+<h4>Contact</h4>
+<p>Email: library@lms.com</p>
+<p>Phone: +91 98765 43210</p>
+</div>
+</div>
+<div class="footer-bottom">
+<p>© 2026 Library Management System | All Rights Reserved</p>
+</div>
+</footer>
+
+<script src="script.js"></script>
+
+<script>
+
+let allIssuedRecords = [];
+
+async function loadIssuedBooks(){
+
+try {
+
+    // User info
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    if (user) {
+        document.getElementById("userName").textContent = user.fullName || user.username;
+        document.getElementById("userId").textContent = user._id.slice(-6).toUpperCase();
+    }
+
+    const response = await BorrowService.getMyIssued()
+    allIssuedRecords = response.data || []
+
+    renderIssuedBooks(allIssuedRecords)
+
+} catch(error) {
+    console.error(error)
+    alert("Failed to load issued books")
+}
+
+}
+
+function renderIssuedBooks(records) {
+    const tableBody = document.getElementById("booksTableBody")
+    tableBody.innerHTML = ""
+
+    if (records.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">No books found</td></tr>`
+        return
+    }
+
+    records.forEach(record => {
+
+        const row = document.createElement("tr")
+
+        row.innerHTML = `
+        <td>
+        <img src="${record.book?.bookImage || 'image copy 16.png'}" class="book-img">
+        </td>
+
+        <td>${record.book?._id}</td>
+        <td>${record.book?.title}</td>
+        <td>${record.book?.author}</td>
+        <td>${record.book?.edition}</td>
+
+        <td>
+        <button class="return-btn" data-book="${record.book?._id}">
+        Request Return
+        </button>
+        </td>
+        `
+
+        tableBody.appendChild(row)
+
+    })
+
+    attachReturnEvents()
+}
+
+function filterIssuedBooks() {
+    const query = document.getElementById("issuedSearchInput").value.trim().toLowerCase();
+
+    if (!query) {
+        renderIssuedBooks(allIssuedRecords);
+        return;
+    }
+
+    const filtered = allIssuedRecords.filter(record => {
+        const title = (record.book?.title || "").toLowerCase();
+        const author = (record.book?.author || "").toLowerCase();
+        const bookId = (record.book?._id || "").toLowerCase();
+        return title.includes(query) || author.includes(query) || bookId.includes(query);
+    });
+
+    renderIssuedBooks(filtered);
+}
+
+function attachReturnEvents(){
+
+const buttons = document.querySelectorAll(".return-btn")
+
+buttons.forEach(btn => {
+btn.addEventListener("click", async function(){
+
+const bookId = this.getAttribute("data-book")
+
+const confirmReturn = confirm("Send return request?")
+if(!confirmReturn) return
+
+try {
+
+const response = await RequestService.createRequest({
+bookId: bookId,
+type: "return"
+})
+
+alert(response.message || "Return request sent")
+
+this.disabled = true
+this.textContent = "Requested"
+
+} catch(error) {
+
+console.error(error)
+
+if(error.message.includes("exists")){
+this.disabled = true
+this.textContent = "Already Requested"
+}
+
+alert(error.message)
+
+}
+
+})
+})
+
+}
+
+loadIssuedBooks()
+
+// ===== AUTOCOMPLETE =====
+const acInput = document.getElementById("issuedSearchInput");
+const acList = document.getElementById("issuedAutoList");
+let acIndex = -1;
+
+acInput.addEventListener("input", function() {
+    const val = this.value.trim().toLowerCase();
+    acList.innerHTML = "";
+    acIndex = -1;
+
+    // Also filter the table live
+    filterIssuedBooks();
+
+    if (val.length < 1) { acList.classList.remove("active"); return; }
+
+    const matches = allIssuedRecords.filter(r =>
+        (r.book?.title || "").toLowerCase().includes(val) ||
+        (r.book?.author || "").toLowerCase().includes(val) ||
+        (r.book?._id || "").toLowerCase().includes(val)
+    ).slice(0, 8);
+
+    if (matches.length === 0) { acList.classList.remove("active"); return; }
+
+    matches.forEach(r => {
+        const div = document.createElement("div");
+        div.className = "autocomplete-item";
+        div.innerHTML = `<span class="item-title">${r.book?.title}</span><span class="item-author">by ${r.book?.author}</span>`;
+        div.addEventListener("click", () => {
+            acInput.value = r.book?.title;
+            acList.classList.remove("active");
+            filterIssuedBooks();
+        });
+        acList.appendChild(div);
+    });
+    acList.classList.add("active");
+});
+
+acInput.addEventListener("keydown", function(e) {
+    const items = acList.querySelectorAll(".autocomplete-item");
+    if (e.key === "ArrowDown") { e.preventDefault(); acIndex = Math.min(acIndex + 1, items.length - 1); updateAC(items); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); acIndex = Math.max(acIndex - 1, 0); updateAC(items); }
+    else if (e.key === "Enter" && acIndex >= 0) { e.preventDefault(); items[acIndex].click(); }
+    else if (e.key === "Enter") { e.preventDefault(); filterIssuedBooks(); acList.classList.remove("active"); }
+});
+
+function updateAC(items) {
+    items.forEach((el, i) => el.classList.toggle("selected", i === acIndex));
+}
+
+document.addEventListener("click", function(e) {
+    if (!acInput.contains(e.target) && !acList.contains(e.target)) acList.classList.remove("active");
+});
+
+// Reset button
+document.getElementById("resetBtn").addEventListener("click", () => {
+    acInput.value = "";
+    renderIssuedBooks(allIssuedRecords);
+});
+
+</script>
+
+</body>
+</html>

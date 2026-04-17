@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>My Requests | LMS</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<header>
+<img src="nit-kkr-logo.jpeg" alt="logo">
+<img src="image copy 15.png" alt="logo1">
+</header>
+
+
+<nav class="navbar">
+
+<div class="user_details">
+<span><strong>User:</strong> Krishna</span>
+</div>
+
+<div class="logout">
+<a href="login.html">Logout</a>
+</div>
+
+</nav>
+
+
+
+<main class="stu_fac_dashboard">
+
+<section class="welcome">
+<h2>Manage Requests 📩</h2>
+<p>Manage your requests </p>
+</section>
+
+<!-- SEARCH BAR -->
+<section class="dashboard-search">
+<div class="dashboard-search-bar">
+<div class="autocomplete-wrapper">
+<input type="text" id="requestSearchInput" class="dashboard-search-input" placeholder="Search requests by book title, type, or status..." autocomplete="off">
+<div class="autocomplete-list" id="requestAutoList"></div>
+</div>
+<button class="dashboard-search-btn" onclick="filterRequests()">🔍 Search</button>
+<button type="button" class="dashboard-reset-btn" id="resetBtn" title="Reset">✕</button>
+</div>
+</section>
+
+
+<section class="table_of_books">
+
+<h2>My Requests</h2>
+
+<table class="booktable">
+
+<thead>
+<tr>
+<th>Book</th>
+<th>Type</th>
+<th>Status</th>
+<th>Date</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="requestTable">
+
+<tr>
+<td colspan="5">Loading...</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</section>
+
+</main>
+
+
+
+<footer class="library-footer">
+
+<div class="footer-container">
+
+<div class="footer-section">
+<h3>Library Management System</h3>
+<p>Your digital gateway to knowledge.</p>
+</div>
+
+<div class="footer-section">
+<h4>Quick Links</h4>
+<ul>
+<li><a href="student_faculty_dashboard.html">Dashboard</a></li>
+<li><a href="getIssued_books.html">My Books</a></li>
+<li><a href="book_search.html">Browse Books</a></li>
+</ul>
+</div>
+
+<div class="footer-section">
+<h4>Contact</h4>
+<p>Email: library@lms.com</p>
+<p>Phone: +91 98765 43210</p>
+</div>
+
+</div>
+
+<div class="footer-bottom">
+<p>© 2026 LMS</p>
+</div>
+
+</footer>
+
+
+<script src="script.js"></script>
+
+<script>
+
+let allRequests = [];
+
+document.addEventListener("DOMContentLoaded", loadRequests)
+
+async function loadRequests(){
+
+try{
+
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+        if (user) {
+            // Update username displays
+            document.querySelector(".user_details").innerHTML = `
+                <span><strong>User Name:</strong> ${user.fullName || user.username}</span>
+                <span><strong>User ID:</strong> ${user._id.slice(-6).toUpperCase()}</span>
+            `;
+            document.querySelector(".welcome h2").textContent = `Welcome, ${user.fullName || user.username} 🙌`;
+        }
+
+const res = await RequestService.getMyRequests()
+
+allRequests = res.data || []
+
+renderRequests(allRequests)
+
+}
+
+catch(err){
+
+console.error(err)
+
+document.getElementById("requestTable").innerHTML = `
+<tr>
+<td colspan="5">Failed to load requests</td>
+</tr>
+`
+
+alert(err.message)
+
+}
+
+}
+
+function renderRequests(requests) {
+    const table = document.getElementById("requestTable")
+    table.innerHTML = ""
+
+    if(requests.length === 0){
+        table.innerHTML = `
+        <tr>
+        <td colspan="5" style="text-align:center; padding:20px;">No requests found</td>
+        </tr>
+        `
+        return
+    }
+
+    requests.forEach(req => {
+
+        const row = document.createElement("tr")
+
+        const book = req.book ? req.book.title : "Unknown"
+
+        const type = req.type
+
+        const status = req.status
+
+        const date = new Date(req.createdAt).toLocaleDateString("en-IN")
+
+        let actionBtn = "-"
+
+        if(status === "pending"){
+
+        actionBtn = `
+        <button class="cancel-btn"
+        onclick="cancelRequest('${req._id}')">
+        Cancel
+        </button>
+        `
+        }
+
+        row.innerHTML = `
+        <td>${book}</td>
+
+        <td style="text-transform: capitalize;">
+        ${type}
+        </td>
+
+        <td class="status-${status}">
+        ${status}
+        </td>
+
+        <td>${date}</td>
+
+        <td>${actionBtn}</td>
+        `
+
+        table.appendChild(row)
+
+    })
+}
+
+function filterRequests() {
+    const query = document.getElementById("requestSearchInput").value.trim().toLowerCase();
+
+    if (!query) {
+        renderRequests(allRequests);
+        return;
+    }
+
+    const filtered = allRequests.filter(req => {
+        const book = (req.book ? req.book.title : "").toLowerCase();
+        const type = (req.type || "").toLowerCase();
+        const status = (req.status || "").toLowerCase();
+        return book.includes(query) || type.includes(query) || status.includes(query);
+    });
+
+    renderRequests(filtered);
+}
+
+async function cancelRequest(id){
+
+if(!confirm("Cancel this request?")) return
+
+try{
+
+await RequestService.cancelRequest(id)
+
+alert("Request cancelled successfully")
+
+loadRequests()
+
+}
+
+catch(err){
+
+console.error(err)
+
+alert(err.message)
+
+}
+
+}
+
+// ===== AUTOCOMPLETE =====
+const acInput = document.getElementById("requestSearchInput");
+const acList = document.getElementById("requestAutoList");
+let acIndex = -1;
+
+acInput.addEventListener("input", function() {
+    const val = this.value.trim().toLowerCase();
+    acList.innerHTML = "";
+    acIndex = -1;
+
+    // Also filter the table live
+    filterRequests();
+
+    if (val.length < 1) { acList.classList.remove("active"); return; }
+
+    // Build unique suggestions from request data
+    const seen = new Set();
+    const suggestions = [];
+
+    allRequests.forEach(req => {
+        const bookTitle = req.book ? req.book.title : null;
+        if (bookTitle && bookTitle.toLowerCase().includes(val) && !seen.has(bookTitle.toLowerCase())) {
+            seen.add(bookTitle.toLowerCase());
+            suggestions.push({ label: bookTitle, sub: `${req.type} - ${req.status}` });
+        }
+    });
+
+    if (suggestions.length === 0) { acList.classList.remove("active"); return; }
+
+    suggestions.slice(0, 8).forEach(s => {
+        const div = document.createElement("div");
+        div.className = "autocomplete-item";
+        div.innerHTML = `<span class="item-title">${s.label}</span><span class="item-author">${s.sub}</span>`;
+        div.addEventListener("click", () => {
+            acInput.value = s.label;
+            acList.classList.remove("active");
+            filterRequests();
+        });
+        acList.appendChild(div);
+    });
+    acList.classList.add("active");
+});
+
+acInput.addEventListener("keydown", function(e) {
+    const items = acList.querySelectorAll(".autocomplete-item");
+    if (e.key === "ArrowDown") { e.preventDefault(); acIndex = Math.min(acIndex + 1, items.length - 1); updateAC(items); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); acIndex = Math.max(acIndex - 1, 0); updateAC(items); }
+    else if (e.key === "Enter" && acIndex >= 0) { e.preventDefault(); items[acIndex].click(); }
+    else if (e.key === "Enter") { e.preventDefault(); filterRequests(); acList.classList.remove("active"); }
+});
+
+function updateAC(items) {
+    items.forEach((el, i) => el.classList.toggle("selected", i === acIndex));
+}
+
+document.addEventListener("click", function(e) {
+    if (!acInput.contains(e.target) && !acList.contains(e.target)) acList.classList.remove("active");
+});
+
+// Reset button
+document.getElementById("resetBtn").addEventListener("click", () => {
+    acInput.value = "";
+    renderRequests(allRequests);
+});
+
+</script>
+
+</body>
+
+</html>

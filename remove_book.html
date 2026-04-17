@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REMOVE BOOK | LMS</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+<img src="nit-kkr-logo.jpeg" alt="logo" loading="lazy">
+<img src="image copy 15.png" alt="logo1">
+</header>
+
+<nav class="navbar">
+<div class="user_details">
+<span><strong>Librarian Name:</strong> krishna</span>
+<span><strong>Librarian ID:</strong> 123456</span>
+</div>
+
+<div class="logout">
+<a href="#" id="logout-btn">Logout</a>
+</div>
+</nav>
+
+<main class="stu_fac_dashboard">
+
+<section class="welcome">
+<h2>Remove Books 🗑️</h2>
+<p>Delete damaged, outdated, or unused books from the library records</p>
+</section>
+
+<!-- SEARCH BAR -->
+<section class="dashboard-search">
+<div class="dashboard-search-bar">
+<div class="autocomplete-wrapper">
+<input type="text" id="removeSearchInput" class="dashboard-search-input"
+placeholder="Search books by ISBN, title, author, edition, or branch..." autocomplete="off">
+<div class="autocomplete-list" id="removeAutoList"></div>
+</div>
+<button class="dashboard-search-btn" onclick="filterBooks()">🔍 Search</button>
+<button type="button" class="dashboard-reset-btn" id="resetBtn">✕</button>
+</div>
+</section>
+
+<section class="table_of_books">
+<table class="booktable">
+<thead>
+<tr>
+<th>Cover</th>
+<th>ISBN</th>
+<th>Book Title</th>
+<th>Author</th>
+<th>Edition</th>
+<th>Branch</th>
+<th>Available</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="bookTableBody"></tbody>
+</table>
+</section>
+
+</main>
+
+<footer class="library-footer">
+<div class="footer-container">
+<div class="footer-section">
+<h3>Library Management System</h3>
+<p>Your digital gateway to knowledge.</p>
+</div>
+</div>
+</footer>
+
+<script src="script.js" defer></script>
+
+<script>
+let allBooks = [];
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    async function loadBooks() {
+        try {
+            const result = await BookService.getAllBooks();
+            allBooks = result.data || result || [];
+            renderBooks(allBooks);
+        } catch (error) {
+            console.error(error);
+            alert("Failed to load books");
+        }
+    }
+
+    loadBooks();
+});
+
+// ===== RENDER =====
+function renderBooks(books) {
+    const tableBody = document.getElementById("bookTableBody");
+    tableBody.innerHTML = "";
+
+    if (books.length === 0) {
+        tableBody.innerHTML =
+        '<tr><td colspan="8" style="text-align:center;">No books found</td></tr>';
+        return;
+    }
+
+    books.forEach(book => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+        <td><img src="image copy 16.png" class="book-img"></td>
+        <td>${book.isbn_no || "-"}</td>
+        <td>${book.title || "-"}</td>
+        <td>${book.author || "-"}</td>
+        <td>${book.edition || "-"}</td>
+        <td>${book.branch || "-"}</td>
+        <td>${book.availableCopies || 0}/${book.totalCopies || 0}</td>
+        <td>
+            <button onclick="deleteBook('${book.isbn_no}')">Remove</button>
+        </td>
+        `;
+
+        tableBody.appendChild(row);
+    });
+}
+
+// ===== FILTER =====
+function filterBooks() {
+    const query = document.getElementById("removeSearchInput").value.toLowerCase();
+
+    if (!query) {
+        renderBooks(allBooks);
+        return;
+    }
+
+    const filtered = allBooks.filter(book =>
+        (book.title || "").toLowerCase().includes(query) ||
+        (book.author || "").toLowerCase().includes(query) ||
+        (book.isbn_no || "").toLowerCase().includes(query)
+    );
+
+    renderBooks(filtered);
+}
+
+// ===== DELETE =====
+async function deleteBook(isbn) {
+    if (!confirm("Delete this book?")) return;
+
+    try {
+        await BookService.removeBook(isbn);
+        alert("Deleted successfully");
+
+        const res = await BookService.getAllBooks();
+        allBooks = res.data || res || [];
+        renderBooks(allBooks);
+
+    } catch (error) {
+        console.error(error);
+        alert("Delete failed");
+    }
+}
+</script>
+
+</body>
+</html>
